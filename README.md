@@ -1,4 +1,6 @@
-# Codebase: Training Accurate LLMs with Low-Bit Weights and Activations
+# QuEST: Stable Training of LLMs with 1-Bit Weights and Activations
+
+[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2502.05003)
 
 ## Quickstart 
 
@@ -47,3 +49,8 @@ pip install -e .
 After installation, please copy the Python scripts in the `gemm-quest/quest` folder to the `src` folder in our main QuEST project folder.
 
 You can then run the layerwise and end-to-end benchmarks using these scripts. You may need to adjust some configurations in the files to adapt your machine.
+
+## Source Code
+
+This repository is based on the [epfml/schedules-and-scaling](https://github.com/epfml/schedules-and-scaling) repository for their "Scaling Laws and Compute-Optimal Training Beyond Fixed Training Durations" paper. We thank the original creators for making public and open-licenced. 
+
