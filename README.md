@@ -2,6 +2,9 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2502.05003)
 
+<img width="795" alt="image" src="https://github.com/user-attachments/assets/bc615c35-fefb-4d51-b42f-59d5e07f2e46" />
+
+
 ## Quickstart 
 
 Create a conda environment and install dependencies (we recommend Python 3.10):
