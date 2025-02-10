@@ -56,6 +56,10 @@ After installation, please copy the Python scripts in the `gemm-quest/quest` fol
 
 You can then run the layerwise and end-to-end benchmarks using these scripts. You may need to adjust some configurations in the files to adapt your machine.
 
+## Testing the Models
+
+This [notebook](src/HadamardTesting.ipynb) and similar provide a way to test that the trained model generate coherent text and are, indeed, serveable in quantized formats.
+
 ## Source Code
 
 This repository is based on the [epfml/schedules-and-scaling](https://github.com/epfml/schedules-and-scaling) repository for their "Scaling Laws and Compute-Optimal Training Beyond Fixed Training Durations" paper. We thank the original creators for making public and open-licenced. 
