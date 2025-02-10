@@ -1,11 +1,10 @@
 # QuEST: Stable Training of LLMs with 1-Bit Weights and Activations
 
-QuEST is a Quantization-Aware Training (QAT) method that allows stable training of 1-bit Llama-type LLMs, and makes 4-bit training Pareto-optimal.
-
 [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2502.05003)
 
 <img width="795" alt="image" src="https://github.com/user-attachments/assets/bc615c35-fefb-4d51-b42f-59d5e07f2e46" />
 
+QuEST is a Quantization-Aware Training (QAT) method that allows stable training of 1-bit Llama-type LLMs, and makes 4-bit training Pareto-optimal.
 
 ## Quickstart 
 
