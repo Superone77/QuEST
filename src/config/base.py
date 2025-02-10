@@ -1,4 +1,7 @@
 import distributed
+import json
+
+from models.quantization import QUANTIZER_CLASSES
 
 
 def parse_args(base_parser, args, namespace):
@@ -136,6 +139,7 @@ def parse_args(base_parser, args, namespace):
             "slimpajama",
             "slimpajama_chunk1",
             "redpajamav2",
+            "c4",
         ],
     )
     parser.add_argument(
@@ -183,4 +187,23 @@ def parse_args(base_parser, args, namespace):
     parser.add_argument("--bias", default=False, type=bool)
     parser.add_argument("--compile", action="store_true")
     parser.add_argument("--mlp-dim-exp-factor", default=1.0, type=float)
+
+    # Quantization
+    parser.add_argument(
+        "--w-quant", type=str, default="NoQuantizer", choices=QUANTIZER_CLASSES.keys()
+    )
+    parser.add_argument(
+        "--w-quant-kwargs",
+        type=json.loads,
+        default="{}",
+    )
+    parser.add_argument(
+        "--a-quant", type=str, default="NoQuantizer", choices=QUANTIZER_CLASSES.keys()
+    )
+    parser.add_argument(
+        "--a-quant-kwargs",
+        type=json.loads,
+        default="{}",
+    )
+
     return parser.parse_args(args, namespace)

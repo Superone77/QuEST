@@ -6,6 +6,7 @@ import yaml
 
 import torch
 import wandb
+from tqdm import tqdm
 
 from logger.logger import DynamicsLogger
 from optim.weight_averaging import (
@@ -112,6 +113,12 @@ def train(
     stats = {"train_loss": [], "val_loss": [], "val_pp": [], "val_acc": []}
     model.train()
 
+    # Initialize the progress bar
+    if distributed_backend.is_master_process():
+        pbar = tqdm(total=cfg.iterations, desc="Training Progress", position=curr_iter)
+    else:
+        pbar = None
+
     while curr_iter <= cfg.iterations:
         # Save permanent checkpoint
         if cfg.permanent_ckpt_interval > 0:
@@ -200,12 +207,16 @@ def train(
         scheduler.step()
         opt.zero_grad(set_to_none=True)
         if cfg.weight_average:
-            weight_averager.step(not_compiled_model, distributed_backend.is_master_process())
+            weight_averager.step(
+                not_compiled_model, distributed_backend.is_master_process()
+            )
         if cfg.exponential_moving_average:
             ema.step(not_compiled_model, distributed_backend.is_master_process())
         dt = (time.perf_counter_ns() - t_start) / 1e9
 
         curr_iter += 1
+        if distributed_backend.is_master_process():
+            pbar.update(1)
 
         if (
             cfg.log_interval
@@ -232,7 +243,6 @@ def train(
                         "iter_dt": dt,
                     }
                 )
-
     return stats
 
 

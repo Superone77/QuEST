@@ -1,0 +1,26 @@
+entity: ist
+project: soroush-quest-llm-baselines
+program: train.sh
+method: bayes
+metric:
+  name: val/loss
+  goal: minimize
+parameters:
+  a_quant_weight_decay:
+    distribution: log_uniform_values
+    min: 0.001
+    max: 0.1
+  a_quant_lr_scale:
+    distribution: log_uniform_values
+    min: 0.1
+    max: 10
+early_terminate:
+  type: hyperband
+  min_iter: 1000
+  eta: 2
+  s: 2  
+command: 
+  - ${env}
+  - bash
+  - ${program}
+  - ${args}

@@ -31,3 +31,6 @@ class DistributedBackend(object):
 
     def finalize(self):
         pass
+
+    def barrier(self):
+        pass

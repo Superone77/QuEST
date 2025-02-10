@@ -1,5 +1,5 @@
 """
-Llama style Language Model that is 
+Llama style Language Model that is
 compilable (avoids torch complex)
 """
 
@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from models.base import CausalSelfAttention, GPTBase
+
+from .quantization import QuantizedLinear, QUANTIZER_CLASSES
 
 
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0) -> torch.Tensor:
@@ -83,9 +85,33 @@ class LlamaMLP(nn.Module):
             (hidden_dim + config.multiple_of - 1) // config.multiple_of
         )
 
-        self.w1 = nn.Linear(config.n_embd, hidden_dim, bias=False)
-        self.w2 = nn.Linear(config.n_embd, hidden_dim, bias=False)
-        self.c_proj = nn.Linear(hidden_dim, config.n_embd, bias=False)
+        self.w1 = QuantizedLinear(
+            config.n_embd,
+            hidden_dim,
+            bias=False,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
+        )
+        self.w2 = QuantizedLinear(
+            config.n_embd,
+            hidden_dim,
+            bias=False,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
+        )
+        self.c_proj = QuantizedLinear(
+            hidden_dim,
+            config.n_embd,
+            bias=False,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
+        )
 
     def forward(self, x):
         return self.c_proj(nn.functional.silu(self.w1(x)) * self.w2(x))
@@ -176,9 +202,9 @@ class Llama(GPTBase):
         # "UserWarning: functional_call was passed multiple values for tied weights.
         # This behavior is deprecated and will be an error in future versions"
         # not 100% sure what this is, so far seems to be harmless. TODO investigate
-        self.transformer.wte.weight = (
-            self.lm_head.weight
-        )  # https://paperswithcode.com/method/weight-tying
+        # self.transformer.wte.weight = (
+        #     self.lm_head.weight
+        # )  # https://paperswithcode.com/method/weight-tying
 
         # init all weights
         self.apply(self._init_weights)

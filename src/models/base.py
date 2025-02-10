@@ -14,6 +14,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from .quantization import QuantizedLinear, QUANTIZER_CLASSES
+
 
 class LayerNorm(nn.Module):
     """LayerNorm but with an optional bias. PyTorch doesn't support simply bias=False"""
@@ -32,9 +34,25 @@ class CausalSelfAttention(nn.Module):
         super().__init__()
         assert config.n_embd % config.n_head == 0
         # key, query, value projections for all heads, but in a batch
-        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        self.c_attn = QuantizedLinear(
+            config.n_embd,
+            3 * config.n_embd,
+            bias=config.bias,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
+        )
         # output projection
-        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        self.c_proj = QuantizedLinear(
+            config.n_embd,
+            config.n_embd,
+            bias=config.bias,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
+        )
         # regularization
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
@@ -99,10 +117,16 @@ class MLP(nn.Module):
         super().__init__()
         self.dim_exp_factor = exp_factor * 4
 
-        self.c_fc = nn.Linear(
-            config.n_embd, int(self.dim_exp_factor * config.n_embd), bias=config.bias
+        self.c_fc = QuantizedLinear(
+            config.n_embd,
+            int(self.dim_exp_factor * config.n_embd),
+            bias=config.bias,
+            weight_quantizer=QUANTIZER_CLASSES[config.w_quant](**config.w_quant_kwargs),
+            activation_quantizer=QUANTIZER_CLASSES[config.a_quant](
+                **config.a_quant_kwargs
+            ),
         )
-        self.c_proj = nn.Linear(
+        self.c_proj = QuantizedLinear(
             int(self.dim_exp_factor * config.n_embd), config.n_embd, bias=config.bias
         )
         self.dropout = nn.Dropout(config.dropout)
@@ -135,7 +159,7 @@ class Block(nn.Module):
             x = x + x_attn + x_ffn
         else:
             x = x + self.attn(self.ln_1(x, *args, **kwargs))
-            x_ = self.mlp(self.ln_2(x, *args, **kwargs))
+            x_, _ = self.mlp(self.ln_2(x, *args, **kwargs))
             x = x + x_
         return x
 
@@ -285,7 +309,10 @@ class GPTBase(nn.Module):
         # separate out all parameters to those that will and won't experience regularizing weight decay
         decay = set()
         no_decay = set()
-        whitelist_weight_modules = (torch.nn.Linear,)
+        whitelist_weight_modules = (
+            torch.nn.Linear,
+            QuantizedLinear,
+        )
         # need to do import here to avoid circular import (since llama imports from base here)
         from .utils import BLACKLIST_WEIGHT_MODULES
 
@@ -312,6 +339,7 @@ class GPTBase(nn.Module):
         # so let's manually remove 'lm_head.weight' from decay set. This will include
         # this tensor into optimization via transformer.wte.weight only, and not decayed.
         decay.remove("lm_head.weight")
+        no_decay.add("lm_head.weight")
 
         # validate that we considered every parameter
         param_dict = {pn: p for pn, p in self.named_parameters()}

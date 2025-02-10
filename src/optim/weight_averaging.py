@@ -103,7 +103,10 @@ class WeightAverager:
 
 def map_and_load_state_dict(model, state_dict):
     for key, m_val in model.state_dict().items():
-        for alias in (f'_orig_mod.{key}', f'_orig_mod.module.{key}'):  # handle compiled / nested model
+        for alias in (
+            f"_orig_mod.{key}",
+            f"_orig_mod.module.{key}",
+        ):  # handle compiled / nested model
             if key not in state_dict and alias in state_dict:
                 key = alias
                 break

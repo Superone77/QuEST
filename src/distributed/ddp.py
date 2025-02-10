@@ -3,7 +3,12 @@ import math
 from contextlib import contextmanager
 
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.distributed import init_process_group, destroy_process_group, get_world_size
+from torch.distributed import (
+    init_process_group,
+    destroy_process_group,
+    get_world_size,
+    barrier,
+)
 
 from .backend import DistributedBackend
 
@@ -60,3 +65,6 @@ class DataParallelDistributedBackend(DistributedBackend):
 
     def finalize(self):
         destroy_process_group()
+
+    def barrier(self):
+        barrier()

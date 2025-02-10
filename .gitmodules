@@ -1,0 +1,9 @@
+[submodule "gemm-quest/third-party/cutlass"]
+	path = gemm-quest/third-party/cutlass
+	url = https://github.com/NVIDIA/cutlass.git
+[submodule "gemm-quest/third-party/pybind11"]
+	path = gemm-quest/third-party/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "gemm-quest/third-party/googletest"]
+	path = gemm-quest/third-party/googletest
+	url = https://github.com/google/googletest.git

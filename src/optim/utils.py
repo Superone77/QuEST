@@ -8,6 +8,8 @@ import torch.distributed as dist
 import math
 import wandb
 
+from tqdm.auto import trange
+
 
 def get_batch(datareader, device="cpu"):
     x, y = datareader.sample_batch()
@@ -138,7 +140,7 @@ def eval(
 
     loss_list_val, acc_list = [], []
 
-    for idx in range(max_num_batches):
+    for idx in trange(max_num_batches):
         x, y = get_batch(reader, device=device)
         with ctx:
             outputs = model(x, targets=y, get_logits=True)
