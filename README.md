@@ -64,6 +64,14 @@ You can then run the layerwise and end-to-end benchmarks using these scripts. Yo
 
 This [notebook](src/HadamardTesting.ipynb) and similar provide a way to test that the trained model generate coherent text and are, indeed, serveable in quantized formats.
 
+### HellaSWAG Benchmark
+
+To run the HellaSWAG benchmark, please run the following command:
+
+```bash
+python ./src/eval_hswag.py --model_name "<MODEL_OUTPUT_NAME>" --ckpts_dir "./ckpts"
+```
+
 ## Source Code
 
 This repository is based on the [epfml/schedules-and-scaling](https://github.com/epfml/schedules-and-scaling) repository for their "Scaling Laws and Compute-Optimal Training Beyond Fixed Training Durations" paper. We thank the original creators for making public and open-licenced. 

@@ -9,3 +9,5 @@ transformers
 wandb
 datasets
 zstandard
+fire
+git+https://github.com/EleutherAI/lm-evaluation-harness.git

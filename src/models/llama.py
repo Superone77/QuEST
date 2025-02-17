@@ -225,7 +225,7 @@ class Llama(GPTBase):
         n_params = sum(p.numel() for p in self.parameters())
         return n_params
 
-    def forward(self, idx, targets=None, get_logits=False):
+    def forward(self, idx, targets=None, get_logits=False, all_logits=False):
         device = idx.device
         b, t = idx.size()
         assert (
@@ -252,9 +252,12 @@ class Llama(GPTBase):
             )
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
-            logits = self.lm_head(
-                x[:, [-1], :]
-            )  # note: using list [-1] to preserve the time dim
+            if all_logits:
+                logits = self.lm_head(x)
+            else:
+                logits = self.lm_head(
+                    x[:, [-1], :]
+                )  # note: using list [-1] to preserve the time dim
             loss = None
 
         logits = logits if get_logits else None

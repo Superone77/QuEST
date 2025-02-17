@@ -222,7 +222,7 @@ class GPTBase(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
 
-    def forward(self, idx, targets=None, get_logits=False):
+    def forward(self, idx, targets=None, get_logits=False, all_logits=False):
         device = idx.device
         b, t = idx.size()
         assert (
@@ -257,9 +257,12 @@ class GPTBase(nn.Module):
 
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
-            logits = self.lm_head(
-                x[:, [-1], :]
-            )  # note: using list [-1] to preserve the time dim
+            if all_logits:
+                logits = self.lm_head(x)
+            else:
+                logits = self.lm_head(
+                    x[:, [-1], :]
+                )  # note: using list [-1] to preserve the time dim
             loss = None
         logits = logits if get_logits else None
         return {
