@@ -11,3 +11,7 @@ datasets
 zstandard
 fire
 git+https://github.com/EleutherAI/lm-evaluation-harness.git
+matplotlib
+seaborn
+scipy
+git+https://github.com/Dao-AILab/fast-hadamard-transform.git
