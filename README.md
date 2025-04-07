@@ -1,6 +1,7 @@
 # QuEST: Stable Training of LLMs with 1-Bit Weights and Activations
 
 [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2502.05003)
+[![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/watch?v=e3ClKTyVrkI)
 
 <img width="795" alt="image" src="https://github.com/user-attachments/assets/bc615c35-fefb-4d51-b42f-59d5e07f2e46" />
 
