@@ -6,7 +6,9 @@ import numpy as np
 from scipy import integrate
 from scipy.stats import norm
 
-from fast_hadamard_transform import hadamard_transform
+import sys
+sys.path.append("/projects/0/prjs1462/wanqi/repo/QuEST/src/hadamard_transform")
+from hadamard_transformer_helper import naive_hadamard_transform_with_scale as hadamard_transform
 
 
 class BaseQuantizer(nn.Module):

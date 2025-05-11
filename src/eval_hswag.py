@@ -7,7 +7,9 @@ from huggingface_hub import snapshot_download
 import torch
 from torch import nn
 import torch.nn.functional as F
-from fast_hadamard_transform import hadamard_transform
+import sys
+sys.path.append("/projects/0/prjs1462/wanqi/repo/QuEST/src/hadamard_transform")
+from hadamard_transformer_helper import naive_hadamard_transform_with_scale as hadamard_transform
 from transformers import AutoTokenizer
 from lm_eval.api.model import LM
 from lm_eval import evaluator

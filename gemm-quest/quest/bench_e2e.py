@@ -1,4 +1,5 @@
 import json
+import time
 
 from huggingface_hub import snapshot_download
 from matplotlib import pyplot as plt, font_manager
@@ -7,7 +8,10 @@ import torch
 from torch import nn
 from tqdm import tqdm
 
-from fast_hadamard_transform import hadamard_transform
+
+import sys
+sys.path.append("/projects/0/prjs1462/wanqi/repo/QuEST/src/hadamard_transform")
+from hadamard_transformer_helper import naive_hadamard_transform_with_scale as hadamard_transform
 
 from models.quantization.base_linear import QuantizedLinear
 from models.utils import get_model
