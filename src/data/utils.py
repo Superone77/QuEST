@@ -178,3 +178,105 @@ class DataReader:
         if self.with_replacement:
             return self.num_tokens // self.batch_size
         return self.num_batches_of_seqlen
+
+
+class StreamingDataReader:
+    def __init__(
+        self,
+        data_src,
+        batch_size,
+        sequence_length,
+        seed=1337,
+        with_replacement=False,
+        auto_shard=True,
+        buffer_size=1000,  # Number of sequences to keep in memory
+    ):
+        if isinstance(data_src, (str, Path)):
+            self.data_path = Path(data_src)
+            self.data = None  # Will be loaded in chunks
+        elif isinstance(data_src, (np.ndarray, np.memmap)):
+            raise ValueError("StreamingDataReader does not support in-memory data")
+
+        self.batch_size = batch_size
+        self.sequence_length = sequence_length
+        self.seed = seed
+        self.with_replacement = with_replacement
+        self.buffer_size = buffer_size
+
+        # Get total size of the data
+        self.data_mmap = np.memmap(self.data_path, dtype=np.uint16, mode="r")
+        self.num_tokens = len(self.data_mmap)
+        self.num_sequences = self.num_tokens - self.sequence_length - 1
+
+        if auto_shard and dist.is_initialized():
+            self.world_size = dist.get_world_size()
+            self.rank = dist.get_rank()
+            print(f"Distributed StreamingDataReader Initialized for Worker {self.rank}/{self.world_size}")
+        else:
+            self.world_size = 1
+            self.rank = 0
+
+        # Initialize buffer and indices
+        self.buffer = []
+        self.buffer_indices = []
+        self.current_position = 0
+        self.rng = np.random.default_rng(seed)
+        
+        # Fill initial buffer
+        self._fill_buffer()
+
+    def _fill_buffer(self):
+        """Fill the buffer with new sequences"""
+        if self.with_replacement:
+            # Sample with replacement
+            indices = self.rng.integers(0, self.num_sequences, size=self.buffer_size)
+        else:
+            # Sample without replacement
+            remaining = self.num_sequences - self.current_position
+            if remaining < self.buffer_size:
+                # Reset position and shuffle
+                self.current_position = 0
+                indices = np.arange(self.num_sequences)
+                self.rng.shuffle(indices)
+                indices = indices[:self.buffer_size]
+            else:
+                indices = np.arange(
+                    self.current_position,
+                    self.current_position + self.buffer_size
+                )
+                self.current_position += self.buffer_size
+
+        # Load sequences into buffer
+        self.buffer = []
+        self.buffer_indices = []
+        for idx in indices:
+            sequence = self.data_mmap[idx:idx + self.sequence_length + 1]
+            self.buffer.append(sequence)
+            self.buffer_indices.append(idx)
+
+    def sample_batch(self):
+        """Sample a batch of sequences from the buffer"""
+        if len(self.buffer) < self.batch_size:
+            self._fill_buffer()
+
+        # Sample batch_size sequences from buffer
+        batch_indices = self.rng.choice(len(self.buffer), size=self.batch_size, replace=False)
+        batch_sequences = [self.buffer[i] for i in batch_indices]
+        
+        # Remove used sequences from buffer
+        for i in sorted(batch_indices, reverse=True):
+            del self.buffer[i]
+            del self.buffer_indices[i]
+
+        # Convert to tensors
+        xy = np.stack(batch_sequences).astype(np.int64)
+        x = torch.from_numpy(xy[:, :-1]).contiguous()
+        y = torch.from_numpy(xy[:, 1:]).contiguous()
+        
+        return x, y
+
+    def __len__(self):
+        return self.num_sequences
+
+    def num_batches(self):
+        return self.num_sequences // self.batch_size

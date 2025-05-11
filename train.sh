@@ -10,6 +10,10 @@ export ACC_STEPS=8
 export SEQUENCE_LENGTH=512
 export DATASET="c4" # "slimpajama"
 
+# Enable streaming mode
+export STREAMING=true
+export STREAMING_BUFFER_SIZE=1000  # Number of sequences to keep in memory
+
 # 30M
 export N_LAYER=6
 export N_EMBD=640
@@ -108,4 +112,6 @@ torchrun --nproc_per_node=${NUM_GPUS} ./src/main.py \
     --w-quant ${W_QUANT} \
     --w-quant-kwargs "${W_QUANT_KWARGS}" \
     --a-quant ${A_QUANT} \
-    --a-quant-kwargs "${A_QUANT_KWARGS}"
+    --a-quant-kwargs "${A_QUANT_KWARGS}" \
+    --streaming ${STREAMING} \
+    --streaming-buffer-size ${STREAMING_BUFFER_SIZE}

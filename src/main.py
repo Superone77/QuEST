@@ -241,33 +241,43 @@ def get_exp_name(args, distributed_backend):
 
 def get_data_readers(args, verbose=True):
     data_srcs = get_dataset(args)
-    train_reader = DataReader(
-        data_src=data_srcs["train"],
-        batch_size=args.batch_size,
-        sequence_length=args.sequence_length,
-        seed=args.data_seed,
-        with_replacement=False,
-        auto_shard=True,
-        keep_in_ram=args.data_in_ram,
-    )
-    val_reader = DataReader(
-        data_src=data_srcs["val"],
-        batch_size=args.batch_size,
-        sequence_length=args.sequence_length,
-        seed=args.data_seed,
-        with_replacement=False,
-        auto_shard=False,  # NOTE Identical Per Rank
-        keep_in_ram=args.data_in_ram,
-    )
+    
+    if isinstance(data_srcs["train"], str):  # Non-streaming mode
+        train_reader = DataReader(
+            data_src=data_srcs["train"],
+            batch_size=args.batch_size,
+            sequence_length=args.sequence_length,
+            seed=args.data_seed,
+            with_replacement=False,
+            auto_shard=True,
+        )
+        val_reader = DataReader(
+            data_src=data_srcs["val"],
+            batch_size=args.batch_size,
+            sequence_length=args.sequence_length,
+            seed=args.data_seed,
+            with_replacement=False,
+            auto_shard=True,
+        )
+    else:  # Streaming mode
+        from data.utils import StreamingDataReader
+        train_reader = StreamingDataReader(
+            data_src=data_srcs["train"],
+            batch_size=args.batch_size,
+            sequence_length=args.sequence_length,
+            seed=args.data_seed,
+            with_replacement=False,
+            auto_shard=True,
+            buffer_size=args.streaming_buffer_size if hasattr(args, 'streaming_buffer_size') else 1000,
+        )
+        val_reader = None  # Validation is not supported in streaming mode
 
     if verbose:
-        print(f"Num training tokens: {train_reader.num_tokens}")
-        print(f"Num validation tokens: {val_reader.num_tokens}")
+        print(f"Train dataset size: {len(train_reader)}")
+        if val_reader is not None:
+            print(f"Val dataset size: {len(val_reader)}")
 
-    return {
-        "train": train_reader,
-        "val": val_reader,
-    }
+    return {"train": train_reader, "val": val_reader}
 
 
 if __name__ == "__main__":
